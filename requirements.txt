@@ -1,0 +1,5 @@
+numpy>=1.21
+matplotlib>=3.4
+pymc3>=3.11
+Theano>=1.0
+opencv-python>=4.5
