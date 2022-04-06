@@ -6,7 +6,7 @@ process that can be understood as a system with a binary state transition) using
 described model. A two-dimensional understanding can provide the missing link to other dynamic processes,
 such as the movement of repair proteins. The following gif shows a simulation of the expansion of repair positions along a two-dimensional cell culture.
 
-[CellJul Gif](figures/gif/random_500.gif)
+![CellJul Gif](figures/gif/random_500.gif)
 
 ## Install
 We provide an interactive [Python Jupyer Notebook](KJMA\ Cell\ Dynamics.ipynb) (however, at the curren stage, there are no explanations). Use `Python>=3`, we recommend `Python==3.6` or `Python==3.8`. Install requirements for the Jupyter Notebook with `pip`:
