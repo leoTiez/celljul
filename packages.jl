@@ -6,6 +6,7 @@ dependencies = [
     "Turing",
     "MCMCChains",
     "Distributions",
-    "Random"
+    "Random",
+    "SpecialFunctions"
 ]
 pkg.add(dependencies)
