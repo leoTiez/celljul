@@ -11,47 +11,44 @@ such as the movement of repair proteins. The following two gifs show a simulatio
  ![](figures/gif/simulation_repair_(100,%20100).gif) | ![](figures/gif/simulation_protein_(100,%20100).gif) |
 
 ## Install
-We provide an interactive [Python Jupyer Notebook](KJMA\ Cell\ Dynamics.ipynb) (however, at the curren stage, there are no explanations). Use `Python>=3`, we recommend `Python==3.6` or `Python==3.8`. Install requirements for the Jupyter Notebook with `pip`:
+I provide an interactive [Python Jupyer Notebook](KJMA\ Cell\ Dynamics.ipynb). Use `Python>=3`, I recommend `Python==3.6` or `Python==3.8`. Install requirements for the Jupyter Notebook with `pip`:
 
 ```commandline
 python3 -m pip install -r requirements.txt
 ```
 
-The rest of the code is implemented in Julia. Use `Julia >= 1.`, we recommend `Julia==1.6`. To install the packages, run
+Initially, I intended to use this as an example to get a grip on Julia. However, I realised that the Python code seems to be more accurate. I provide therefore the code in both, Julia and Python. Use `Julia >= 1.`, I recommend `Julia==1.6`. To install the packages, run
 
 ```commandline
 julia packages.jl
 ```
+## Python Usage
 
-## Usage
+I provide a command line module for Python. Run:
+
+```commandline
+python3 celljul.py -m=1.5 --beta=0.05 --theta=0.9 [-t=80 --dim=500 --sim_prot --do_sort --save_gif]
+```
+
+where parameters in brackets are optional. For more information type
+
+```commandline
+python3 celljul.py --help
+```
+
+## Julia Usage
 Include the CellJul package via
 
 ```julia
 include("celljul.jl)
 ```
 
-We recommend to use the default setting, which defines volume growth to be 1 per time step. If you know the KJMA parameters $m$, $\beta$, and $\theta$, you can simply run 
-
+and use the example as a reference: 
 ```julia
 m = 1.5  # example m
 beta = 1/20.  # example beta
 theta = 0.9  # exmaple theta
 
-rep_frac = run_simulation(
-    m, 
-    beta,
-    theta,
-    sim_protein=true,  # Simulate the repair protein rather than the repair process
-    to_time=120.,  # Simulation time
-    dims=(100, 100),  # Dimensions of the grid. 
-    verbosity=2,  # Verbosity level. Set it to 2 if you want to know the performance output
-    to_gif=false  # Save simulation as a gif file
-)
-```
-
-If you want to determine the full range of possible values for the nucleation rate $n$, the growth speed $g$, and the shape $\sigma$, you can run the approximation method. This requires the creation of mock-up data.
-
-```julia
 obs, t_time = create_data(
     120.,  # time scale for the mock up data
     params,  # KJMA parameters as a vector
@@ -69,5 +66,19 @@ chain = mcmc_sample(
     show_progress=true  # Show progress bar
 )
 
-n, g, m = fetch_data(chain, v_type="argmin_n")
+n_p, g_p, sig_p = fetch_data(chain, v_type="argmin_n")
+
+rep_frac = run_simulation(
+    m, 
+    beta,
+    theta,
+    n_p, 
+    g_p,
+    sig_p,
+    sim_protein=true,  # Simulate the repair protein rather than the repair process
+    to_time=120.,  # Simulation time
+    dims=(100, 100),  # Dimensions of the grid. 
+    verbosity=2,  # Verbosity level. Set it to 2 if you want to know the performance output
+    to_gif=false  # Save simulation as a gif file
+)
 ```
