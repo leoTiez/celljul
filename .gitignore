@@ -4,3 +4,5 @@ Julia\ KJMA*
 figures/gif/random.gif
 figires/gif/sorted*
 data
+py/__pycache__
+.idea
