@@ -1,6 +1,6 @@
 __precompile__(true)
 
-include("kjma.jl")
-include("estimation.jl")
-include("simulation.jl")
+include("jl/kjma.jl")
+include("jl/estimation.jl")
+include("jl/simulation.jl")
 
