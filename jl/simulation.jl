@@ -1,6 +1,7 @@
 using LinearAlgebra 
 using Plots
 using SpecialFunctions
+import OpenCV as cv
 
 const min_repair_t = 3.0
 
@@ -10,8 +11,9 @@ Base.@kwdef mutable struct Nucleation
     y::Int32
     timestamp::Float32
     m::Float32
-    d_vol::Float32
-    volume::Float32=0.
+    g_p::Float32
+    sig_p::Float32
+    radius::Float32=0.
 end
 
 function get_coordinates(self::Nucleation)::Vector{Float32}
@@ -19,7 +21,7 @@ function get_coordinates(self::Nucleation)::Vector{Float32}
 end
 
 function update_radius!(self::Nucleation)::Nothing
-    self.volume += self.d_vol
+    self.radius += self.g_p
     return nothing
 end
 
@@ -34,8 +36,8 @@ end
 
 function calc_circular_radius(self::Nucleation)::Float32
     # calculate volume fraction that changes w/ the dimension of the space
-    factor = pi.^(self.m / 2.) / (gamma((self.m / 2.) + 1.) / pi)
-    return (self.volume / factor)^(1. / self.m)
+    volume = self.sig_p * self.radius.^(self.m - 1) # self.sig_p .* self.radius.^(self.m - 1)
+    return (volume / pi)^(1. / self.m) 
 end
 
 function circle!(
@@ -46,7 +48,6 @@ function circle!(
     t::Float32
 )::Nothing
     coordinates = findall(time_state .== -1)
-    # coordinates = findall(iszero, state)
     @inbounds for coords in coordinates
         x = coords[1]
         y = coords[2]
@@ -68,7 +69,8 @@ function simulation_step!(
     nucleation_list::Vector{Nucleation},
     m::Float32,
     n_p::Float64,
-    d_vol::Float32,
+    g_p::Float32,
+    sig_p::Float32,
     sim_protein::Bool=true,
     verbosity::Int32=1
 )::Nothing
@@ -98,7 +100,8 @@ function simulation_step!(
                 y=pos[2],
                 timestamp=convert(Float64, t), 
                 m=m,
-                d_vol=d_vol
+                g_p=g_p,
+                sig_p=sig_p
             )
         )
     end
@@ -107,27 +110,16 @@ end
 
 function run_simulation(
     m::Float64,
-    beta::Float64,
-    theta::Float64;
+    theta::Float64,
+    n_p::Float64,
+    g_p::Float64,
+    sig_p::Float64;
     sim_protein::Bool=true,
     to_time::Float64=120.,
     dims::Tuple{Int64, Int64}=(100, 100),
-    n_p=nothing,
-    g_p=nothing,
-    sig_p=nothing,
     verbosity::Int=2,
     to_gif::Bool=false
 )::Vector{Float64}
-
-    if n_p == nothing
-        n_p = beta^m
-    end
-
-    if sig_p == nothing || g_p == nothing
-        d_vol = 1.
-    else
-        d_vol = sig_p * g_p^m
-    end
 
     state = zeros(Float32, dims)
     # Conversion times
@@ -141,7 +133,7 @@ function run_simulation(
         fig = heatmap(state, title="Time 0 min")
     end
     
-    m, d_vol, theta = Float32(m), Float32(d_vol), Float32(theta)
+    m, g_p, sig_p, theta = Float32(m), Float32(g_p), Float32(sig_p), Float32(theta)
     verbosity = Int32(verbosity)
     if to_gif
         anim = @animate for t in 1.:Float32(to_time)
@@ -152,7 +144,8 @@ function run_simulation(
                 nucleation_list, 
                 m, 
                 n_p,
-                d_vol,
+                g_p,
+                sig_p,
                 sim_protein,
                 verbosity
             )
@@ -169,7 +162,8 @@ function run_simulation(
                 nucleation_list, 
                 m, 
                 n_p,
-                d_vol,
+                g_p,
+                sig_p,
                 sim_protein,
                 verbosity
             )

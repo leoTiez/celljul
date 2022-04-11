@@ -12,12 +12,11 @@ using Random
     norm_sig::Float64=5.
 )
     # priors for nucleation rate n and growth speed g
-    n_p ~ Exponential(exp_decay)
-    g_p ~ Exponential(exp_decay)
-    shape_p ~ truncated(Normal(4 * pi, norm_sig), 0., Inf)
+    n_p ~ truncated(Exponential(exp_decay), 0., 1.)
+    shape_p ~ truncated(Normal(pi, norm_sig), 0., Inf)
     
     # computaion of beta and probbility p
-    beta = ((shape_p .* n_p .* g_p .^(m-1)) ./ m).^(1 / m)
+    beta = (shape_p .* n_p).^(1 ./ m)
     p = repair_fraction(time_points, m, beta, theta)
 
     # The number of observations and probabilities
@@ -37,7 +36,7 @@ function mcmc_sample(
     show_progress::Bool=false
 )
     # Create Gibbs sampler for each variable
-    alg = Gibbs(MH(:n_p), MH(:g_p), MH(:shape_p))
+    alg = Gibbs(MH(:n_p), MH(:shape_p))
     # Start sampling.
     chain = sample(
         nucleation_prob(
@@ -59,22 +58,22 @@ function fetch_data(chain::MCMCChains.Chains, v_type::String="argmin_n")::Tuple{
     n_p, g_p, sig_p = nothing, nothing, nothing
     if lowercase(v_type) == "mean"
         n_p = mean(chain[:n_p])
-        g_p = mean(chain[:g_p])
+        g_p = 1.
         sig_p = mean(chain[:shape_p])
     elseif lowercase(v_type) == "argmin_n"
         amin = argmin(chain[:n_p])
         n_p = chain[:n_p][amin]
-        g_p = chain[:g_p][amin]
+        g_p = 1.
         sig_p = chain[:shape_p][amin]
-    elseif lowercase(v_type) == "argmin_g"
-        amin = argmin(chain[:g_p])
-        n_p = chain[:n_p][amin]
-        g_p = chain[:g_p][amin]
-        sig_p = chain[:shape_p][amin]
+    elseif lowercase(v_type) == "argmax_g"
+        amax = argmax(chain[:g_p])
+        n_p = chain[:n_p][amax]
+        g_p = 1.
+        sig_p = chain[:shape_p][amax]
     elseif lowercase(v_type) == "argmin_sig"
         amin = argmin(chain[:shape_p])
         n_p = chain[:n_p][amin]
-        g_p = chain[:g_p][amin]
+        g_p = 1.
         sig_p = chain[:shape_p][amin]
     else
         throw(ArgumentError("Passed v_type %s is not accepted. 
